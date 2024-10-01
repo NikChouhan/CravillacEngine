@@ -36,7 +36,7 @@ void Triangle::InitWindow(HINSTANCE hinstance, int width, int height)
 	WNDCLASSEX wc{ 0 };
 
 	wc.cbSize = sizeof(wc);
-	wc.style = CS_OWNDC;
+	wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
@@ -50,7 +50,7 @@ void Triangle::InitWindow(HINSTANCE hinstance, int width, int height)
 	HR(RegisterClassEx(&wc), L"Failed to register class");
 	// create window instance;
 
-	m_hwnd = CreateWindowEx(0, pClassName, L"Window", WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, 200, 200, 400, 400, nullptr, nullptr, m_hInstance, nullptr);
+	m_hwnd = CreateWindowEx(0, pClassName, L"Window", WS_OVERLAPPEDWINDOW, 200, 200, 400, 400, nullptr, nullptr, m_hInstance, nullptr);
 
 
 	bool sw = ShowWindow(m_hwnd, SW_SHOW);
@@ -92,6 +92,7 @@ void Triangle::CreateSwapChain()
 	sd.BufferDesc.RefreshRate.Denominator = 1;
 	sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	sd.Windowed = TRUE;
 
 	if (m_enableMSAA)
 	{
