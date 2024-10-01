@@ -40,20 +40,20 @@ void Triangle::InitWindow(HINSTANCE hinstance, int width, int height)
 	wc.lpfnWndProc = WndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
-	wc.hInstance = *m_hInstance;
+	wc.hInstance = m_hInstance;
 	wc.hIcon = nullptr;
 	wc.hCursor = nullptr;
 	wc.hbrBackground = nullptr;
 	wc.lpszMenuName = nullptr;
 	wc.lpszClassName = pClassName;
 
-	RegisterClassEx(&wc);
+	HR(RegisterClassEx(&wc), L"Failed to register class");
 	// create window instance;
 
-	HWND hWnd = CreateWindowEx(0, pClassName, L"Window", WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, 200, 200, 400, 400, nullptr, nullptr, *m_hInstance, nullptr);
+	m_hwnd = CreateWindowEx(0, pClassName, L"Window", WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, 200, 200, 400, 400, nullptr, nullptr, m_hInstance, nullptr);
 
 
-	bool sw = ShowWindow(hWnd, SW_SHOW);
+	bool sw = ShowWindow(m_hwnd, SW_SHOW);
 }
 
 void Triangle::InitDX11()
@@ -69,11 +69,8 @@ void Triangle::CreateDevice()
 	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	HRESULT hr = D3D11CreateDevice(0, D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, 0, 0, D3D11_SDK_VERSION, &m_device, &m_featureLevel, &m_immediateContext);
-	if (FAILED(hr))
-	{
-		MessageBox(0, L"D3D11CreateDevice Failed.", 0, 0);
-	}
+	HR(D3D11CreateDevice(0, D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, 0, 0, D3D11_SDK_VERSION, &m_device, &m_featureLevel, &m_immediateContext), L"D3D11CreateDevice Failed.");
+
 	if (m_featureLevel != D3D_FEATURE_LEVEL_11_0)
 	{
 		MessageBox(0, L"Direct3D Feature Level 11 unsupported.", 0, 0);
@@ -82,12 +79,7 @@ void Triangle::CreateDevice()
 
 void Triangle::CheckMSAAQualityLevel()
 {
-	HRESULT hr = m_device->CheckMultisampleQualityLevels(DXGI_FORMAT_B8G8R8A8_UNORM, 4, &m_m4xMsaaQuality);
-	if (FAILED(hr))
-	{
-		MessageBox(0, L"MSAA4x Support check Failed.", 0, 0);
-		return;
-	}
+	HR(m_device->CheckMultisampleQualityLevels(DXGI_FORMAT_B8G8R8A8_UNORM, 4, &m_m4xMsaaQuality), L"MSAA4x Support check Failed.");
 	m_enableMSAA = true;
 }
 
@@ -113,5 +105,21 @@ void Triangle::CreateSwapChain()
 	}
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.BufferCount = 1;
-	sd.OutputWindow = *m_hwnd;
+	sd.OutputWindow = m_hwnd;
+
+	IDXGIDevice* dxgiDevice = nullptr;
+	HR((m_device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**> ( & dxgiDevice))), L"Failed to query DXGI device");
+
+	IDXGIAdapter* dxgiAdapter = nullptr;
+	HR(dxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**> (&dxgiAdapter)), L"Failed to Get DXGI Adapter");
+
+	IDXGIFactory* dxgiFactory = 0;
+	HR(dxgiAdapter->GetParent(__uuidof(IDXGIFactory), (void**)&dxgiFactory), L"Failed to get DXGI factory pointer");
+	
+	HR(dxgiFactory->CreateSwapChain(m_device, &sd, &m_SwapChain), L"Failed to create swapchain");
+
+
+	/*ReleaseCOM(dxgiDevice);
+	ReleaseCOM(dxgiAdapter);
+	ReleaseCOM(dxgiFactory);*/
 }

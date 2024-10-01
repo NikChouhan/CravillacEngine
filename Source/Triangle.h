@@ -4,13 +4,26 @@
 #include <d3d11.h>
 
 
+#define HR(x, errorMsg) \
+{ \
+    HRESULT hr = (x); \
+    if (FAILED(hr)) \
+    { \
+        MessageBox(0, errorMsg, L"Error", MB_OK); \
+		exit(1);	\
+    } \
+}
+
+#define ReleaseCOM(x) { if(x){ x->Release(); x = nullptr; } }
+
+
 
 class Triangle
 {
 private:
 
-	HINSTANCE* m_hInstance;
-	HWND* m_hwnd;
+	HINSTANCE m_hInstance;
+	HWND m_hwnd;
 
 	UINT m_width = 800;
 	UINT m_height = 800;
@@ -24,16 +37,25 @@ private:
 	UINT m_m4xMsaaQuality;
 
 	DXGI_SWAP_CHAIN_DESC* m_pDesc; // Pointer to swap chain description.
-	IDXGISwapChain** m_ppSwapChain;
+	IDXGISwapChain* m_SwapChain;
 
 public:
 	void InitWindow(HINSTANCE hinstance, int width, int height);
-
-	Triangle(HINSTANCE hinstance, UINT width, UINT height) : m_hInstance(&hinstance), m_width(width), m_height(height)
-	{
-		InitWindow(hinstance, width, height);
-	}
 	void InitDX11();
+
+	Triangle(UINT width, UINT height) : m_width(width), m_height(height)
+	{
+		InitWindow(this->m_hInstance, width, height);
+		InitDX11();
+	}
+
+	~Triangle()
+	{
+		// Release DirectX resources
+		/*ReleaseCOM(m_SwapChain);
+		ReleaseCOM(m_immediateContext);
+		ReleaseCOM(m_device);*/
+	}
 
 private:
 	void CreateDevice();
