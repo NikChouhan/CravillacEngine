@@ -19,11 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\Triangle.h" />
+    <ClInclude Include="Source\Timer.h" />
+    <ClInclude Include="Source\Application.h" />
+    <ClInclude Include="Source\WinUtil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Triangle.cpp" />
-    <ClCompile Include="Source\WinMain.cpp" />
+    <ClCompile Include="Source\Timer.cpp" />
+    <ClCompile Include="Source\Application.cpp" />
+    <ClCompile Include="Triangle.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
