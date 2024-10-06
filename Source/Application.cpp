@@ -1,4 +1,6 @@
 #include "Application.h"
+#include <vector>
+#include <iostream>
 
 namespace
 {
@@ -143,6 +145,7 @@ bool Application::InitWindow()
 
 	ShowWindow(m_hwnd, SW_SHOW);
 	UpdateWindow(m_hwnd);
+
 	return true;
 }
 
@@ -210,6 +213,29 @@ void Application::CreateSwapChain()
 
 	IDXGIFactory* dxgiFactory = 0;
 	HR(dxgiAdapter->GetParent(__uuidof(IDXGIFactory), (void**)&dxgiFactory), L"Failed to get DXGI factory pointer");
+	
+	//enumerating devices for fun
+
+	UINT i = 0;
+	IDXGIAdapter* pAdapter;
+	std::vector<IDXGIAdapter*> vAdapters;
+	std::wstringstream debugOutput;
+
+	debugOutput << L"Enumerating adapters:\n";
+	OutputDebugString(L"Total adapters found: ");
+
+	while (dxgiFactory->EnumAdapters(i, &pAdapter) != DXGI_ERROR_NOT_FOUND)
+	{
+		DXGI_ADAPTER_DESC adapterDesc;
+		pAdapter->GetDesc(&adapterDesc);
+
+		debugOutput << L"Adapter " << i << L": " << adapterDesc.Description << L"\n";
+		OutputDebugString(adapterDesc.Description);
+
+		vAdapters.push_back(pAdapter);
+		++i;
+	}
+
 	
 	HR(dxgiFactory->CreateSwapChain(m_device, &sd, &m_SwapChain), L"Failed to create swapchain");
 
@@ -310,6 +336,8 @@ bool Application::Init()
 {
 	if(!InitWindow()) return false;
 	InitDX11();
+
+	return true;
 }
 
 void Application::OnResize()
