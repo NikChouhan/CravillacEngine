@@ -5,6 +5,7 @@
 struct SimpleVertex
 {
 	XMFLOAT3 Pos;
+	XMFLOAT4 Color;
 };
 
 class Triangle : public Application
@@ -30,6 +31,7 @@ private:
 	ID3D11PixelShader* m_pixelShader = nullptr;
 	ID3D11InputLayout* m_vertexLayout = nullptr;
 	ID3D11Buffer* m_vertexBuffer = nullptr;
+	ID3D11RasterizerState* m_rasterState = nullptr;
 };
 
 
@@ -74,17 +76,23 @@ void Triangle::DrawScene()
 {
 	assert(m_immediateContext);
 	assert(m_SwapChain);
-
-	m_immediateContext->ClearRenderTargetView(m_RenderTargetView, Colors::Red); 
+	SetViewPort();
+	m_immediateContext->ClearRenderTargetView(m_RenderTargetView, Colors::Magenta);
+	m_immediateContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	// Render a triangle
+	UINT stride = sizeof(SimpleVertex);
+	UINT offset = 0;
+	m_immediateContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+	m_immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_immediateContext->IASetInputLayout(m_vertexLayout);
+	m_immediateContext->RSSetState(m_rasterState);
 
 	// Set the shaders
 	m_immediateContext->VSSetShader(m_vertexShader, nullptr, 0);
 	m_immediateContext->PSSetShader(m_pixelShader, nullptr, 0);
 
 	//draw the triangle
-
 	m_immediateContext->Draw(3, 0);
 
 	HR((m_SwapChain->Present(0, 0)), L"Failed to draw scene");
@@ -137,13 +145,14 @@ HRESULT Triangle::TrianglePipeline()
 {
 	// Compile vertex shader
 	ID3DBlob* vsBlob = nullptr;
-	HR(CompileShader(L"Shaders/Triangle_VS.hlsl", "VSMain", "vs_4_0", &vsBlob), L"Failed compiling vertex shader");
+	HR(CompileShader(L"Shaders/Triangle_VS.hlsl", "VSMain", "vs_5_0", &vsBlob), L"Failed compiling vertex shader");
 
 	HR(m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &m_vertexShader), L"Failed to create Vertex shader");
 
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 	UINT numElements = ARRAYSIZE(layout);
 
@@ -153,25 +162,24 @@ HRESULT Triangle::TrianglePipeline()
 
 	vsBlob->Release();
 
-	m_immediateContext->IASetInputLayout(m_vertexLayout), L"Failed to set vertex layout";
-
-
 	// Compile pixel shader
 	ID3DBlob* psBlob = nullptr;
-	HR(CompileShader(L"Shaders/Triangle_PS.hlsl", "PSMain", "ps_4_0", &psBlob), L"Failed compiling pixel shader");
+	HR(CompileShader(L"Shaders/Triangle_PS.hlsl", "PSMain", "ps_5_0", &psBlob), L"Failed compiling pixel shader");
 
 	HR(m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &m_pixelShader), L"Failed to create pixel shader");
 	psBlob->Release();
 
 	HR(CreateVertexBuffer(), L"Failed to create vertex buffer");
 
-	// Set vertex buffer
-	UINT stride = sizeof(SimpleVertex);
-	UINT offset = 0;
-	m_immediateContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+	D3D11_RASTERIZER_DESC rasterDesc = {};
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.FrontCounterClockwise = false;
+	rasterDesc.DepthClipEnable = true;
 
-	// Set primitive topology
-	m_immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// Create the rasterizer state object
+	HR(m_device->CreateRasterizerState(&rasterDesc, &m_rasterState), L"Failed to create rasterizer state");
+	
 
 	return S_OK;
 }
@@ -181,15 +189,15 @@ HRESULT Triangle::CreateVertexBuffer()
 	// Create vertex buffer
 	SimpleVertex vertices[] =
 	{
-		XMFLOAT3(0.0f, 0.5f, 0.5f),
-		XMFLOAT3(0.5f, -0.5f, 0.5f),
-		XMFLOAT3(-0.5f, -0.5f, 0.5f),
+		{ XMFLOAT3(0.0f, 0.5f, 0.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)},
+		{ XMFLOAT3(0.5f, -0.5f, 0.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f)},
+		{ XMFLOAT3(-0.5f, -0.5f, 0.5f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f)}
 	};
 	D3D11_BUFFER_DESC bd = {};
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(SimpleVertex) * 3;
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bd.CPUAccessFlags = 0;
+	bd.Usage             = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth         = sizeof(SimpleVertex) * 3;
+	bd.BindFlags         = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags    = 0;
 
 	D3D11_SUBRESOURCE_DATA InitData = {};
 	InitData.pSysMem = vertices;

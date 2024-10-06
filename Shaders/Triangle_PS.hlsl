@@ -1,4 +1,17 @@
-float4 PSMain( float4 Pos : SV_POSITION ) : SV_Target
+struct PS_INPUT
 {
-    return float4( 1.0f, 1.0f, 0.0f, 0.5f );    // Yellow, with Alpha = 0.5
+    float4 Position : SV_Position;
+    float4 Color : COLOR0;
+};
+
+struct PS_OUTPUT
+{
+    float4 Color : SV_Target0;
+};
+
+PS_OUTPUT PSMain(PS_INPUT input)
+{
+    PS_OUTPUT output = (PS_OUTPUT) 0;
+    output.Color = input.Color;
+    return output;
 }

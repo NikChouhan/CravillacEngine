@@ -96,7 +96,7 @@ public:
 	virtual void OnMouseUp(WPARAM btnState, int x, int y) { }
 	virtual void OnMouseMove(WPARAM btnState, int x, int y) { }
 
-private:
+protected:
 	void CreateDevice();
 	void CheckMSAAQualityLevel();
 	void CreateSwapChain();
