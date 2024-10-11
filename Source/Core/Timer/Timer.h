@@ -2,13 +2,12 @@
 
 #pragma once
 
-#include "WinUtil.h"
+#include "../../Core/WinUtil.h"
 
 class GameTimer
 {
 public:
 	GameTimer();
-	float GameTime()const; // in seconds
 	float DeltaTime()const; // in seconds
 	void Reset(); // Call before message loop.
 	void Start(); // Call when unpaused.

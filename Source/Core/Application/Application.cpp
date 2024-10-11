@@ -7,7 +7,7 @@ namespace
 	// This is just used to forward Windows messages from a global window
 	// procedure to our member function window procedure because we cannot
 	// assign a member function to WNDCLASS::lpfnWndProc.
-	Application* app = 0;
+	Cravillac::Application* app = 0;
 }
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -17,7 +17,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return app->MsgProc(hwnd, msg, wParam, lParam);
 }
 
-LRESULT CALLBACK Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Cravillac::Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
@@ -44,7 +44,7 @@ LRESULT CALLBACK Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-Application::Application(HINSTANCE hinstance)
+Cravillac::Application::Application(HINSTANCE hinstance)
 	: m_width(800), m_height(600),
 	m_mainWndCaption(L"DX11 Hello World"),
 	m_enableMSAA(false), m_hwnd(0), m_appPaused(false),
@@ -56,7 +56,7 @@ Application::Application(HINSTANCE hinstance)
 	app = this;
 }
 
-Application::~Application()
+Cravillac::Application::~Application()
 {
 	// Release DirectX resources
 	ReleaseCOM(m_depthStencilView);
@@ -67,7 +67,7 @@ Application::~Application()
 	ReleaseCOM(m_device);
 }
 
-int Application::Run()
+int Cravillac::Application::Run()
 {
 	MSG msg = { 0 };
 	m_timer.Reset();
@@ -98,22 +98,22 @@ int Application::Run()
 	return (int)msg.wParam;
 }
 
-HINSTANCE Application::AppInst() const
+HINSTANCE Cravillac::Application::AppInst() const
 {
 	return m_hInstance;
 }
 
-HWND Application::MainWnd() const
+HWND Cravillac::Application::MainWnd() const
 {
 	return m_hwnd;
 }
 
-float Application::AspectRatio() const
+float Cravillac::Application::AspectRatio() const
 {
 	return static_cast<float>(m_width / m_height);
 }
 
-bool Application::InitWindow()
+bool Cravillac::Application::InitWindow()
 {
 	WNDCLASS wc;
 	wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -149,18 +149,63 @@ bool Application::InitWindow()
 	return true;
 }
 
-void Application::InitDX11()
+void Cravillac::Application::InitDX11()
 {
 	CreateDevice();
 	CheckMSAAQualityLevel();
 	CreateSwapChain();
 	CreateRenderTargetView();
-	CreateDepthStencilView();
+	//CreateDepthStencilView();
 
 	SetViewPort();
 }
 
-void Application::CreateDevice()
+HRESULT Cravillac::Application::CompileShader(const WCHAR* fileName, LPCSTR entryPoint, LPCSTR shaderModel, ID3DBlob** blob)
+{
+	if (!fileName || !entryPoint || !shaderModel)
+	{
+		return E_INVALIDARG;
+	}
+
+	*blob = nullptr;
+
+	UINT flags = D3DCOMPILE_ENABLE_STRICTNESS;
+#if defined( DEBUG ) || defined( _DEBUG )
+	flags |= D3DCOMPILE_DEBUG;
+#endif
+
+	const D3D_SHADER_MACRO defines[] =
+	{
+		"EXAMPLE_DEFINE", "1",
+		NULL, NULL
+	};
+
+	ID3DBlob* shaderBlob = nullptr;
+	ID3DBlob* errorBlob = nullptr;
+	HRESULT hr = D3DCompileFromFile(fileName, defines, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		entryPoint, shaderModel,
+		flags, 0, &shaderBlob, &errorBlob);
+	if (FAILED(hr))
+	{
+		if (errorBlob)
+		{
+			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			errorBlob->Release();
+		}
+
+		if (shaderBlob)
+			shaderBlob->Release();
+
+		return hr;
+	}
+
+	*blob = shaderBlob;
+
+	return hr;
+}
+
+
+void Cravillac::Application::CreateDevice()
 {
 #if defined(DEBUG) || defined(_DEBUG) 
 	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -174,13 +219,13 @@ void Application::CreateDevice()
 	}
 }
 
-void Application::CheckMSAAQualityLevel()
+void Cravillac::Application::CheckMSAAQualityLevel()
 {
 	HR(m_device->CheckMultisampleQualityLevels(DXGI_FORMAT_B8G8R8A8_UNORM, 4, &m_m4xMsaaQuality), L"MSAA4x Support check Failed.");
 	m_enableMSAA = true;
 }
 
-void Application::CreateSwapChain()
+void Cravillac::Application::CreateSwapChain()
 {
 	DXGI_SWAP_CHAIN_DESC sd = {};
 	sd.BufferDesc.Width = m_width;
@@ -246,7 +291,7 @@ void Application::CreateSwapChain()
 }
 
 
-void Application::CreateRenderTargetView()
+void Cravillac::Application::CreateRenderTargetView()
 {
 	ID3D11Texture2D* backBuffer = nullptr;
 	HR(m_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**> (&backBuffer)), L"Failed to get buffer for render target view");
@@ -257,42 +302,54 @@ void Application::CreateRenderTargetView()
 
 }
 
-void Application::CreateDepthStencilView()
-{
-	D3D11_TEXTURE2D_DESC depthStencilDesc = {};
-	depthStencilDesc.Width = m_width;
-	depthStencilDesc.Height = m_height;
-	depthStencilDesc.MipLevels = 1;
-	depthStencilDesc.ArraySize = 1;
-	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+//void Cravillac::Application::CreateDepthStencilView()
+//{
+//	D3D11_TEXTURE2D_DESC depthTextDesc = {};
+//	depthTextDesc.Width = m_width;
+//	depthTextDesc.Height = m_height;
+//	depthTextDesc.MipLevels = 1;
+//	depthTextDesc.ArraySize = 1;
+//	depthTextDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+//
+//	if (m_enableMSAA)
+//	{
+//		depthTextDesc.SampleDesc.Count = 4;
+//		depthTextDesc.SampleDesc.Quality = m_m4xMsaaQuality - 1;
+//	}
+//	else
+//	{
+//		depthTextDesc.SampleDesc.Count = 1;
+//		depthTextDesc.SampleDesc.Quality = 0;
+//	}
+//
+//	depthTextDesc.Usage = D3D11_USAGE_DEFAULT;
+//	depthTextDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+//	depthTextDesc.CPUAccessFlags = 0;
+//	depthTextDesc.MiscFlags = 0;
+//
+//	// Create depth stencil state
+//	D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
+//	depthStencilDesc.DepthEnable = TRUE;
+//	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+//	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+//	depthStencilDesc.StencilEnable = FALSE;
+//
+//	HR(m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState), L"Failed to create depth stencil state");
+//
+//	// Set the depth stencil state
+//	m_immediateContext->OMSetDepthStencilState(m_depthStencilState, 1);
+//
+//	HR(m_device->CreateTexture2D(&depthTextDesc, 0, &m_depthStencilBuffer), L"Failed to create Depth/Stencil buffer");
+//
+//	HR(m_device->CreateDepthStencilView(m_depthStencilBuffer, 0, &m_depthStencilView), L"Failed to create Depth/Stencil view");
+//
+//	//add to immediate context
+//
+//	m_immediateContext->OMSetRenderTargets(1, &m_RenderTargetView, m_depthStencilView);
+//
+//}
 
-	if (m_enableMSAA)
-	{
-		depthStencilDesc.SampleDesc.Count = 4;
-		depthStencilDesc.SampleDesc.Quality = m_m4xMsaaQuality - 1;
-	}
-	else
-	{
-		depthStencilDesc.SampleDesc.Count = 1;
-		depthStencilDesc.SampleDesc.Quality = 0;
-	}
-
-	depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
-	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	depthStencilDesc.CPUAccessFlags = 0;
-	depthStencilDesc.MiscFlags = 0;
-
-	HR(m_device->CreateTexture2D(&depthStencilDesc, 0, &m_depthStencilBuffer), L"Failed to create Depth/Stencil buffer");
-
-	HR(m_device->CreateDepthStencilView(m_depthStencilBuffer, 0, &m_depthStencilView), L"Failed to create Depth/Stencil view");
-
-	//add to immediate context
-
-	m_immediateContext->OMSetRenderTargets(1, &m_RenderTargetView, m_depthStencilView);
-
-}
-
-void Application::SetViewPort()
+void Cravillac::Application::SetViewPort()
 {
 	D3D11_VIEWPORT vp;
 
@@ -306,7 +363,7 @@ void Application::SetViewPort()
 	m_immediateContext->RSSetViewports(1, &vp);
 }
 
-void Application::CalculateFrameStats()
+void Cravillac::Application::CalculateFrameStats()
 {
 	// Code computes the average frames per second, and also the 
 	// average time it takes to render one frame. These stats 
@@ -332,7 +389,7 @@ void Application::CalculateFrameStats()
 	}
 }
 
-bool Application::Init()
+bool Cravillac::Application::Init()
 {
 	if(!InitWindow()) return false;
 	InitDX11();
@@ -340,7 +397,7 @@ bool Application::Init()
 	return true;
 }
 
-void Application::OnResize()
+void Cravillac::Application::OnResize()
 {
 	assert(m_immediateContext);
 	assert(m_device);
@@ -411,7 +468,7 @@ void Application::OnResize()
 	m_immediateContext->RSSetViewports(1, &mScreenViewport);
 }
 
-LRESULT CALLBACK Application::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Cravillac::Application::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
