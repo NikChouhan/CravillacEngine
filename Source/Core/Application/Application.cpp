@@ -45,7 +45,7 @@ LRESULT CALLBACK Cravillac::Application::WndProc(HWND hWnd, UINT msg, WPARAM wPa
 }
 
 Cravillac::Application::Application(HINSTANCE hinstance)
-	: m_width(800), m_height(600),
+	: m_width(1800), m_height(900),
 	m_mainWndCaption(L"DX11 Hello World"),
 	m_enableMSAA(false), m_hwnd(0), m_appPaused(false),
 	m_minimized(false), m_maximized(false),
@@ -59,6 +59,7 @@ Cravillac::Application::Application(HINSTANCE hinstance)
 Cravillac::Application::~Application()
 {
 	// Release DirectX resources
+	ReleaseCOM(m_depthStencilState);
 	ReleaseCOM(m_depthStencilView);
 	ReleaseCOM(m_depthStencilBuffer);
 	ReleaseCOM(m_RenderTargetView);
@@ -110,7 +111,7 @@ HWND Cravillac::Application::MainWnd() const
 
 float Cravillac::Application::AspectRatio() const
 {
-	return static_cast<float>(m_width / m_height);
+	return static_cast<float>(m_width) / static_cast<float> (m_height);
 }
 
 bool Cravillac::Application::InitWindow()
@@ -155,7 +156,7 @@ void Cravillac::Application::InitDX11()
 	CheckMSAAQualityLevel();
 	CreateSwapChain();
 	CreateRenderTargetView();
-	//CreateDepthStencilView();
+	CreateDepthStencilView();
 
 	SetViewPort();
 }
@@ -302,52 +303,53 @@ void Cravillac::Application::CreateRenderTargetView()
 
 }
 
-//void Cravillac::Application::CreateDepthStencilView()
-//{
-//	D3D11_TEXTURE2D_DESC depthTextDesc = {};
-//	depthTextDesc.Width = m_width;
-//	depthTextDesc.Height = m_height;
-//	depthTextDesc.MipLevels = 1;
-//	depthTextDesc.ArraySize = 1;
-//	depthTextDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-//
-//	if (m_enableMSAA)
-//	{
-//		depthTextDesc.SampleDesc.Count = 4;
-//		depthTextDesc.SampleDesc.Quality = m_m4xMsaaQuality - 1;
-//	}
-//	else
-//	{
-//		depthTextDesc.SampleDesc.Count = 1;
-//		depthTextDesc.SampleDesc.Quality = 0;
-//	}
-//
-//	depthTextDesc.Usage = D3D11_USAGE_DEFAULT;
-//	depthTextDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-//	depthTextDesc.CPUAccessFlags = 0;
-//	depthTextDesc.MiscFlags = 0;
-//
-//	// Create depth stencil state
-//	D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
-//	depthStencilDesc.DepthEnable = TRUE;
-//	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-//	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
-//	depthStencilDesc.StencilEnable = FALSE;
-//
-//	HR(m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState), L"Failed to create depth stencil state");
-//
-//	// Set the depth stencil state
-//	m_immediateContext->OMSetDepthStencilState(m_depthStencilState, 1);
-//
-//	HR(m_device->CreateTexture2D(&depthTextDesc, 0, &m_depthStencilBuffer), L"Failed to create Depth/Stencil buffer");
-//
-//	HR(m_device->CreateDepthStencilView(m_depthStencilBuffer, 0, &m_depthStencilView), L"Failed to create Depth/Stencil view");
-//
-//	//add to immediate context
-//
-//	m_immediateContext->OMSetRenderTargets(1, &m_RenderTargetView, m_depthStencilView);
-//
-//}
+void Cravillac::Application::CreateDepthStencilView()
+{
+	D3D11_TEXTURE2D_DESC depthTextDesc = {};
+	depthTextDesc.Width = m_width;
+	depthTextDesc.Height = m_height;
+	depthTextDesc.MipLevels = 1;
+	depthTextDesc.ArraySize = 1;
+	depthTextDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	if (m_enableMSAA)
+	{
+		depthTextDesc.SampleDesc.Count = 4;
+		depthTextDesc.SampleDesc.Quality = m_m4xMsaaQuality - 1;
+	}
+	else
+	{
+		depthTextDesc.SampleDesc.Count = 1;
+		depthTextDesc.SampleDesc.Quality = 0;
+	}
+
+	depthTextDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthTextDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthTextDesc.CPUAccessFlags = 0;
+	depthTextDesc.MiscFlags = 0;
+
+	HR(m_device->CreateTexture2D(&depthTextDesc, 0, &m_depthStencilBuffer), L"Failed to create Depth/Stencil buffer");
+
+
+	// Create depth stencil state
+	D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
+	depthStencilDesc.DepthEnable = TRUE;
+	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	depthStencilDesc.StencilEnable = FALSE;
+
+	HR(m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState), L"Failed to create depth stencil state");
+
+	// Set the depth stencil state
+	m_immediateContext->OMSetDepthStencilState(m_depthStencilState, 1);
+
+	HR(m_device->CreateDepthStencilView(m_depthStencilBuffer, 0, &m_depthStencilView), L"Failed to create Depth/Stencil view");
+
+	//add to immediate context
+
+	m_immediateContext->OMSetRenderTargets(1, &m_RenderTargetView, m_depthStencilView);
+
+}
 
 void Cravillac::Application::SetViewPort()
 {
@@ -413,7 +415,7 @@ void Cravillac::Application::OnResize()
 
 	// Resize the swap chain and recreate the render target view.
 
-	HR(m_SwapChain->ResizeBuffers(1, m_width, m_height, DXGI_FORMAT_R8G8B8A8_UNORM, 0), L"Failed to resize swap chain buffer");
+	HR(m_SwapChain->ResizeBuffers(1, m_width, m_height, DXGI_FORMAT_B8G8R8A8_UNORM, 0), L"Failed to resize swap chain buffer");
 	ID3D11Texture2D* backBuffer;
 	HR(m_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer)), L"Failed to fetch backbuffer for resizing");
 	HR(m_device->CreateRenderTargetView(backBuffer, 0, &m_RenderTargetView), L"Failed to Create RTV for resizing");

@@ -7,7 +7,7 @@ cbuffer ConstantBuffer : register(b0)
 
 struct VS_INPUT
 {
-    float4 Position : POSITION;
+    float3 Position : POSITION;
     float4 Color : COLOR0;
 };
 
@@ -19,10 +19,11 @@ struct VS_OUTPUT
 
 VS_OUTPUT VSMain(VS_INPUT input)
 {
-    VS_OUTPUT output = (VS_OUTPUT) 0;
-    output.Position = mul(input.Position, World);
-    output.Position = mul(input.Position, View);
-    output.Position = mul(input.Position, Projection);
+    VS_OUTPUT output = (VS_OUTPUT)0;
+    float4 worldPosition = mul(float4(input.Position, 1.0f), World);
+    float4 viewPosition = mul(worldPosition, View);
+    output.Position = mul(viewPosition, Projection);
+    
     output.Color = input.Color;
     return output;
 }

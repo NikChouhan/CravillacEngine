@@ -25,6 +25,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Core\Application\Application.h" />
+    <ClInclude Include="Source\Core\StandardTypes.h" />
     <ClInclude Include="Source\Core\Timer\Timer.h" />
     <ClInclude Include="Source\Core\WinUtil.h" />
   </ItemGroup>

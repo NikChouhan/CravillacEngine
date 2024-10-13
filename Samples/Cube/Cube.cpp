@@ -1,5 +1,6 @@
 #include "../../Source/Core/Application/Application.h"
 #include <assert.h>
+#include <DirectXColors.h>
 
 struct SimpleVertex
 {
@@ -54,6 +55,13 @@ namespace Cravillac
 	}
 	Cube::~Cube()
 	{
+		ReleaseCOM(m_rasterState);
+		ReleaseCOM(m_pixelShader);
+		ReleaseCOM(m_constantBuffer);
+		ReleaseCOM(m_indexBuffer);
+		ReleaseCOM(m_vertexShader);
+		ReleaseCOM(m_vertexLayout);
+		ReleaseCOM(m_vertexBuffer);
 	}
 	bool Cube::Init()
 	{
@@ -69,6 +77,10 @@ namespace Cravillac
 	}
 	void Cube::UpdateScene(float dt)
 	{
+		static float angle = 0.0f;
+		angle += dt;
+
+		m_world = DirectX::XMMatrixRotationY(angle);
 
 	}
 
@@ -76,7 +88,7 @@ namespace Cravillac
 	{
 		// Compile vertex shader
 		ID3DBlob* vsBlob = nullptr;
-		HR(CompileShader(L"Shaders/Cube/Cube_VS.hlsl", "VSMain", "vs_5_0", &vsBlob), L"Failed compiling vertex shader");
+		HR(CompileShader(L"Shaders/Cube/Cube_VS.hlsl", "VSMain", "vs_4_0", &vsBlob), L"Failed compiling vertex shader");
 
 		HR(m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &m_vertexShader), L"Failed to create Vertex shader");
 
@@ -97,7 +109,7 @@ namespace Cravillac
 
 		// Compile pixel shader
 		ID3DBlob* psBlob = nullptr;
-		HR(CompileShader(L"Shaders/Cube/Cube_PS.hlsl", "PSMain", "ps_5_0", &psBlob), L"Failed compiling pixel shader");
+		HR(CompileShader(L"Shaders/Cube/Cube_PS.hlsl", "PSMain", "ps_4_0", &psBlob), L"Failed compiling pixel shader");
 
 		HR(m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &m_pixelShader), L"Failed to create pixel shader");
 		psBlob->Release();
@@ -150,7 +162,7 @@ namespace Cravillac
 		m_immediateContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 
 		// Create index buffer
-		UINT indices[] =
+		UINT32 indices[] =
 		{
 			3,1,0,
 			2,1,3,
@@ -172,7 +184,7 @@ namespace Cravillac
 		};
 
 		bd.Usage = D3D11_USAGE_DEFAULT;
-		bd.ByteWidth = sizeof(UINT) * 36;
+		bd.ByteWidth = sizeof(UINT32) * 36;
 		bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		bd.CPUAccessFlags = 0;
 		InitData.pSysMem = indices;
@@ -207,23 +219,12 @@ namespace Cravillac
 
 	void Cube::DrawScene()
 	{
-		// Update our time
-		static float t = 0.0f;
-		static ULONGLONG timeStart = 0;
-		ULONGLONG timeCur = GetTickCount64();
-		if (timeStart == 0)
-			timeStart = timeCur;
-		t = (timeCur - timeStart) / 1000.0f;
-
-		m_world = DirectX::XMMatrixRotationY(t);
-
-
 		assert(m_immediateContext);
 		assert(m_SwapChain);
 		SetViewPort();
-		m_immediateContext->ClearRenderTargetView(m_RenderTargetView, Colors::Black);
-		//m_immediateContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		//m_immediateContext->OMSetDepthStencilState(m_depthStencilState, 1);
+		m_immediateContext->ClearRenderTargetView(m_RenderTargetView, DirectX::Colors::CadetBlue);
+		m_immediateContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		m_immediateContext->OMSetDepthStencilState(m_depthStencilState, 1);
 
 		m_immediateContext->OMSetRenderTargets(1, &m_RenderTargetView, m_depthStencilView);
 

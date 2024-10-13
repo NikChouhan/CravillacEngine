@@ -41,8 +41,6 @@ namespace Cravillac
 
 		bool m_enableMSAA = false;
 		UINT m_m4xMsaaQuality;
-
-		//DXGI_SWAP_CHAIN_DESC* m_pDesc; // Pointer to swap chain description.
 		IDXGISwapChain* m_SwapChain;
 
 		ID3D11RenderTargetView* m_RenderTargetView;
@@ -65,7 +63,7 @@ namespace Cravillac
 		//public member variables
 
 		UINT m_width = 800;
-		UINT m_height = 800;
+		UINT m_height = 600;
 
 
 
