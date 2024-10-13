@@ -1,6 +1,9 @@
 #include "../../Source/Core/Application/Application.h"
 #include <assert.h>
 #include <DirectXColors.h>
+#include "../../Source/Core/Graphics/Camera.h"
+
+using namespace DirectX;
 
 struct SimpleVertex
 {
@@ -47,6 +50,7 @@ namespace Cravillac
 		XMMATRIX m_view;
 		XMMATRIX m_projection;
 
+		Graphics::Camera m_camera;
 	};
 
 	Cube::Cube(HINSTANCE hInstance)
@@ -69,6 +73,8 @@ namespace Cravillac
 			return false;
 
 		HR(CubePipeline(), L"Failed to create Cube Pipeline");
+		m_camera.InitAsPerspective(90, m_width, m_height);
+		m_camera.SetPosition({ 0.0f, 2.0f, -3.5f });
 		return true;
 	}
 	void Cube::OnResize()
@@ -80,6 +86,13 @@ namespace Cravillac
 		static float angle = 0.0f;
 		angle += dt;
 
+		ConstantBuffer cb = {
+			.mWorld = SM::Matrix::CreateRotationY(angle),
+			.mView = m_camera.GetViewMatrix().Transpose(),
+			.mProjection = m_camera.GetProjectionMatrix().Transpose()
+		};
+
+		m_immediateContext->UpdateSubresource(m_constantBuffer, 0, nullptr, &cb, 0, 0);
 		m_world = DirectX::XMMatrixRotationY(angle);
 
 	}
@@ -228,13 +241,7 @@ namespace Cravillac
 
 		m_immediateContext->OMSetRenderTargets(1, &m_RenderTargetView, m_depthStencilView);
 
-		// Update variables
-		//
-		ConstantBuffer cb;
-		cb.mWorld = DirectX::XMMatrixTranspose(m_world);
-		cb.mView = DirectX::XMMatrixTranspose(m_view);
-		cb.mProjection = DirectX::XMMatrixTranspose(m_projection);
-		m_immediateContext->UpdateSubresource(m_constantBuffer, 0, nullptr, &cb, 0, 0);
+
 
 		// Render a Cube
 		UINT stride = sizeof(SimpleVertex);

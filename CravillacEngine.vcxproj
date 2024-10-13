@@ -21,13 +21,21 @@
   <ItemGroup>
     <ClCompile Include="Samples\Cube\Cube.cpp" />
     <ClCompile Include="Source\Core\Application\Application.cpp" />
+    <ClCompile Include="Source\Core\Graphics\Camera.cpp" />
     <ClCompile Include="Source\Core\Timer\Timer.cpp" />
+    <ClCompile Include="Source\Ext\Math\SimpleMath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Core\Application\Application.h" />
+    <ClInclude Include="Source\Core\Graphics\Camera.h" />
+    <ClInclude Include="Source\Core\Math\Math.h" />
     <ClInclude Include="Source\Core\StandardTypes.h" />
     <ClInclude Include="Source\Core\Timer\Timer.h" />
     <ClInclude Include="Source\Core\WinUtil.h" />
+    <ClInclude Include="Source\Ext\Math\SimpleMath.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Ext\Math\SimpleMath.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -116,6 +124,8 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
