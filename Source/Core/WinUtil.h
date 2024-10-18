@@ -5,5 +5,7 @@
 #include <DirectXMath.h>
 #include "StandardTypes.h"
 #include "../Ext/Math/SimpleMath.h"
+#include <wrl.h>
 
 namespace SM = DirectX::SimpleMath;
+namespace wrl = Microsoft::WRL;

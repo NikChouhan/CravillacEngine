@@ -59,13 +59,6 @@ Cravillac::Application::Application(HINSTANCE hinstance)
 Cravillac::Application::~Application()
 {
 	// Release DirectX resources
-	ReleaseCOM(m_depthStencilState);
-	ReleaseCOM(m_depthStencilView);
-	ReleaseCOM(m_depthStencilBuffer);
-	ReleaseCOM(m_RenderTargetView);
-	ReleaseCOM(m_SwapChain);
-	ReleaseCOM(m_immediateContext);
-	ReleaseCOM(m_device);
 }
 
 int Cravillac::Application::Run()
@@ -212,7 +205,7 @@ void Cravillac::Application::CreateDevice()
 	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-	HR(D3D11CreateDevice(0, D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, 0, 0, D3D11_SDK_VERSION, &m_device, &m_featureLevel, &m_immediateContext), L"D3D11CreateDevice Failed.");
+	HR(D3D11CreateDevice(0, D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, 0, 0, D3D11_SDK_VERSION, m_device.GetAddressOf(), &m_featureLevel, m_immediateContext.GetAddressOf()), L"D3D11CreateDevice Failed.");
 
 	if (m_featureLevel != D3D_FEATURE_LEVEL_11_0)
 	{
@@ -283,7 +276,7 @@ void Cravillac::Application::CreateSwapChain()
 	}
 
 	
-	HR(dxgiFactory->CreateSwapChain(m_device, &sd, &m_SwapChain), L"Failed to create swapchain");
+	HR(dxgiFactory->CreateSwapChain(m_device.Get(), &sd, m_SwapChain.GetAddressOf()), L"Failed to create swapchain");
 
 
 	ReleaseCOM(dxgiDevice);
@@ -297,7 +290,7 @@ void Cravillac::Application::CreateRenderTargetView()
 	ID3D11Texture2D* backBuffer = nullptr;
 	HR(m_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**> (&backBuffer)), L"Failed to get buffer for render target view");
 
-	HR(m_device->CreateRenderTargetView(backBuffer, 0, &m_RenderTargetView), L"Failed to create Render Target");
+	HR(m_device->CreateRenderTargetView(backBuffer, 0, m_RenderTargetView.GetAddressOf()), L"Failed to create Render Target");
 
 	ReleaseCOM(backBuffer);
 
@@ -328,7 +321,7 @@ void Cravillac::Application::CreateDepthStencilView()
 	depthTextDesc.CPUAccessFlags = 0;
 	depthTextDesc.MiscFlags = 0;
 
-	HR(m_device->CreateTexture2D(&depthTextDesc, 0, &m_depthStencilBuffer), L"Failed to create Depth/Stencil buffer");
+	HR(m_device->CreateTexture2D(&depthTextDesc, 0, m_depthStencilBuffer.GetAddressOf()), L"Failed to create Depth/Stencil buffer");
 
 
 	// Create depth stencil state
@@ -338,16 +331,16 @@ void Cravillac::Application::CreateDepthStencilView()
 	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	depthStencilDesc.StencilEnable = FALSE;
 
-	HR(m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState), L"Failed to create depth stencil state");
+	HR(m_device->CreateDepthStencilState(&depthStencilDesc, m_depthStencilState.GetAddressOf()), L"Failed to create depth stencil state");
 
 	// Set the depth stencil state
-	m_immediateContext->OMSetDepthStencilState(m_depthStencilState, 1);
+	m_immediateContext->OMSetDepthStencilState(m_depthStencilState.Get(), 1);
 
-	HR(m_device->CreateDepthStencilView(m_depthStencilBuffer, 0, &m_depthStencilView), L"Failed to create Depth/Stencil view");
+	HR(m_device->CreateDepthStencilView(m_depthStencilBuffer.Get(), 0, m_depthStencilView.GetAddressOf()), L"Failed to create Depth/Stencil view");
 
 	//add to immediate context
 
-	m_immediateContext->OMSetRenderTargets(1, &m_RenderTargetView, m_depthStencilView);
+	m_immediateContext->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), m_depthStencilView.Get());
 
 }
 
@@ -408,9 +401,6 @@ void Cravillac::Application::OnResize()
 	// Release the old views, as they hold references to the buffers we
 	// will be destroying.  Also release the old depth/stencil buffer.
 
-	ReleaseCOM(m_RenderTargetView);
-	ReleaseCOM(m_depthStencilView);
-	ReleaseCOM(m_depthStencilBuffer);
 
 
 	// Resize the swap chain and recreate the render target view.
@@ -418,7 +408,7 @@ void Cravillac::Application::OnResize()
 	HR(m_SwapChain->ResizeBuffers(1, m_width, m_height, DXGI_FORMAT_B8G8R8A8_UNORM, 0), L"Failed to resize swap chain buffer");
 	ID3D11Texture2D* backBuffer;
 	HR(m_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer)), L"Failed to fetch backbuffer for resizing");
-	HR(m_device->CreateRenderTargetView(backBuffer, 0, &m_RenderTargetView), L"Failed to Create RTV for resizing");
+	HR(m_device->CreateRenderTargetView(backBuffer, 0, m_RenderTargetView.GetAddressOf()), L"Failed to Create RTV for resizing");
 	ReleaseCOM(backBuffer);
 
 	// Create the depth/stencil buffer and view.
@@ -449,13 +439,13 @@ void Cravillac::Application::OnResize()
 	depthStencilDesc.CPUAccessFlags = 0;
 	depthStencilDesc.MiscFlags = 0;
 
-	HR(m_device->CreateTexture2D(&depthStencilDesc, 0, &m_depthStencilBuffer), L"Failed to create Depth Stencil buffer for resizing");
-	HR(m_device->CreateDepthStencilView(m_depthStencilBuffer, 0, &m_depthStencilView), L"Failed to create DSV for resizing");
+	HR(m_device->CreateTexture2D(&depthStencilDesc, 0, m_depthStencilBuffer.GetAddressOf()), L"Failed to create Depth Stencil buffer for resizing");
+	HR(m_device->CreateDepthStencilView(m_depthStencilBuffer.Get(), 0, m_depthStencilView.GetAddressOf()), L"Failed to create DSV for resizing");
 
 
 	// Bind the render target view and depth/stencil view to the pipeline.
 
-	m_immediateContext->OMSetRenderTargets(1, &m_RenderTargetView, m_depthStencilView);
+	m_immediateContext->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), m_depthStencilView.Get());
 
 
 	// Set the viewport transform.

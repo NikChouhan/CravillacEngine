@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <DirectXColors.h>
 #include "../../Source/Core/Graphics/Camera.h"
+#include "../../Source/Core/WinUtil.h"
 
 using namespace DirectX;
 
@@ -37,14 +38,14 @@ namespace Cravillac
 
 	private:
 
-		ID3D11VertexShader* m_vertexShader = nullptr;
-		ID3D11PixelShader* m_pixelShader = nullptr;
-		ID3D11InputLayout* m_vertexLayout = nullptr;
-		ID3D11Buffer* m_vertexBuffer = nullptr;
-		ID3D11RasterizerState* m_rasterState = nullptr;
+		wrl::ComPtr<ID3D11VertexShader> m_vertexShader = nullptr;
+		wrl::ComPtr<ID3D11PixelShader> m_pixelShader = nullptr;
+		wrl::ComPtr<ID3D11InputLayout> m_vertexLayout = nullptr;
+		wrl::ComPtr<ID3D11Buffer> m_vertexBuffer = nullptr;
+		wrl::ComPtr<ID3D11RasterizerState> m_rasterState = nullptr;
 
-		ID3D11Buffer* m_indexBuffer = nullptr;
-		ID3D11Buffer* m_constantBuffer = nullptr;
+		wrl::ComPtr<ID3D11Buffer> m_indexBuffer = nullptr;
+		wrl::ComPtr<ID3D11Buffer> m_constantBuffer = nullptr;
 
 		XMMATRIX m_world;
 		XMMATRIX m_view;
@@ -59,13 +60,6 @@ namespace Cravillac
 	}
 	Cube::~Cube()
 	{
-		ReleaseCOM(m_rasterState);
-		ReleaseCOM(m_pixelShader);
-		ReleaseCOM(m_constantBuffer);
-		ReleaseCOM(m_indexBuffer);
-		ReleaseCOM(m_vertexShader);
-		ReleaseCOM(m_vertexLayout);
-		ReleaseCOM(m_vertexBuffer);
 	}
 	bool Cube::Init()
 	{
@@ -87,12 +81,12 @@ namespace Cravillac
 		angle += dt;
 
 		ConstantBuffer cb = {
-			.mWorld = SM::Matrix::CreateRotationY(angle),
+			.mWorld = SM::Matrix::CreateRotationY(DirectX::XMScalarCos(angle)) *SM::Matrix::CreateRotationZ(DirectX::XMScalarSin(angle)),
 			.mView = m_camera.GetViewMatrix().Transpose(),
 			.mProjection = m_camera.GetProjectionMatrix().Transpose()
 		};
 
-		m_immediateContext->UpdateSubresource(m_constantBuffer, 0, nullptr, &cb, 0, 0);
+		m_immediateContext->UpdateSubresource(m_constantBuffer.Get(), 0, nullptr, &cb, 0, 0);
 		m_world = DirectX::XMMatrixRotationY(angle);
 
 	}
@@ -103,7 +97,7 @@ namespace Cravillac
 		ID3DBlob* vsBlob = nullptr;
 		HR(CompileShader(L"Shaders/Cube/Cube_VS.hlsl", "VSMain", "vs_4_0", &vsBlob), L"Failed compiling vertex shader");
 
-		HR(m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &m_vertexShader), L"Failed to create Vertex shader");
+		HR(m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_vertexShader.GetAddressOf()), L"Failed to create Vertex shader");
 
 		D3D11_INPUT_ELEMENT_DESC layout[] =
 		{
@@ -114,22 +108,20 @@ namespace Cravillac
 
 		//create input layout
 
-		HR(m_device->CreateInputLayout(layout, numElements, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), &m_vertexLayout), L"Failed to create input layout");
+		HR(m_device->CreateInputLayout(layout, numElements, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), m_vertexLayout.GetAddressOf()), L"Failed to create input layout");
 
 		vsBlob->Release();
 
-		m_immediateContext->IASetInputLayout(m_vertexLayout);
+		m_immediateContext->IASetInputLayout(m_vertexLayout.Get());
 
 		// Compile pixel shader
 		ID3DBlob* psBlob = nullptr;
 		HR(CompileShader(L"Shaders/Cube/Cube_PS.hlsl", "PSMain", "ps_4_0", &psBlob), L"Failed compiling pixel shader");
 
-		HR(m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &m_pixelShader), L"Failed to create pixel shader");
+		HR(m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pixelShader.GetAddressOf()), L"Failed to create pixel shader");
 		psBlob->Release();
 
 		HR(CreateVertexBuffer(), L"Failed to create vertex buffer");
-
-		
 
 		D3D11_RASTERIZER_DESC rasterDesc = {};
 		rasterDesc.FillMode = D3D11_FILL_SOLID;
@@ -138,7 +130,7 @@ namespace Cravillac
 		rasterDesc.DepthClipEnable = true;
 
 		// Create the rasterizer state object
-		HR(m_device->CreateRasterizerState(&rasterDesc, &m_rasterState), L"Failed to create rasterizer state");
+		HR(m_device->CreateRasterizerState(&rasterDesc, m_rasterState.GetAddressOf()), L"Failed to create rasterizer state");
 
 
 		return S_OK;
@@ -167,12 +159,12 @@ namespace Cravillac
 
 		D3D11_SUBRESOURCE_DATA InitData = {};
 		InitData.pSysMem = vertices;
-		HR(m_device->CreateBuffer(&bd, &InitData, &m_vertexBuffer), L"Failed to create vertex buffer");
+		HR(m_device->CreateBuffer(&bd, &InitData, m_vertexBuffer.GetAddressOf()), L"Failed to create vertex buffer");
 
 		// Set vertex buffer
 		UINT stride = sizeof(SimpleVertex);
 		UINT offset = 0;
-		m_immediateContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+		m_immediateContext->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 
 		// Create index buffer
 		UINT32 indices[] =
@@ -202,9 +194,9 @@ namespace Cravillac
 		bd.CPUAccessFlags = 0;
 		InitData.pSysMem = indices;
 
-		HR(m_device->CreateBuffer(&bd, &InitData, &m_indexBuffer), L"Failed to create Index buffer");
+		HR(m_device->CreateBuffer(&bd, &InitData, m_indexBuffer.GetAddressOf()), L"Failed to create Index buffer");
 
-		m_immediateContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		m_immediateContext->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
 		// Set primitive topology
 		m_immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -214,18 +206,9 @@ namespace Cravillac
 		bd.ByteWidth = sizeof(ConstantBuffer);
 		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		bd.CPUAccessFlags = 0;
-		HR(m_device->CreateBuffer(&bd, nullptr, &m_constantBuffer), L"Failed to create constant buffer");
+		HR(m_device->CreateBuffer(&bd, nullptr, m_constantBuffer.GetAddressOf()), L"Failed to create constant buffer");
 
 		m_world = DirectX::XMMatrixIdentity();
-
-		// Initialize the view matrix
-		XMVECTOR Eye = DirectX::XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
-		XMVECTOR At = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-		XMVECTOR Up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-		m_view = DirectX::XMMatrixLookAtLH(Eye, At, Up);
-
-		// Initialize the projection matrix
-		m_projection = DirectX::XMMatrixPerspectiveFovLH(XM_PIDIV2, m_width / (FLOAT)m_height, 0.01f, 100.0f);
 
 		return S_OK;
 	}
@@ -235,26 +218,27 @@ namespace Cravillac
 		assert(m_immediateContext);
 		assert(m_SwapChain);
 		SetViewPort();
-		m_immediateContext->ClearRenderTargetView(m_RenderTargetView, DirectX::Colors::CadetBlue);
-		m_immediateContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-		m_immediateContext->OMSetDepthStencilState(m_depthStencilState, 1);
+		auto rtv = m_RenderTargetView.Get();
+		m_immediateContext->ClearRenderTargetView(rtv, DirectX::Colors::CadetBlue);
+		m_immediateContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		m_immediateContext->OMSetDepthStencilState(m_depthStencilState.Get(), 1);
 
-		m_immediateContext->OMSetRenderTargets(1, &m_RenderTargetView, m_depthStencilView);
+		m_immediateContext->OMSetRenderTargets(1, &rtv, m_depthStencilView.Get());
 
 
 
 		// Render a Cube
 		UINT stride = sizeof(SimpleVertex);
 		UINT offset = 0;
-		m_immediateContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+		m_immediateContext->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 		m_immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_immediateContext->IASetInputLayout(m_vertexLayout);
-		m_immediateContext->RSSetState(m_rasterState);
+		m_immediateContext->IASetInputLayout(m_vertexLayout.Get());
+		m_immediateContext->RSSetState(m_rasterState.Get());
 
 		// Set the shaders
-		m_immediateContext->VSSetShader(m_vertexShader, nullptr, 0);
-		m_immediateContext->VSSetConstantBuffers(0, 1, &m_constantBuffer);
-		m_immediateContext->PSSetShader(m_pixelShader, nullptr, 0);
+		m_immediateContext->VSSetShader(m_vertexShader.Get(), nullptr, 0);
+		m_immediateContext->VSSetConstantBuffers(0, 1, m_constantBuffer.GetAddressOf());
+		m_immediateContext->PSSetShader(m_pixelShader.Get(), nullptr, 0);
 
 		//draw the Cube
 		m_immediateContext->DrawIndexed(36, 0, 0);

@@ -22,6 +22,7 @@
     <ClCompile Include="Samples\Cube\Cube.cpp" />
     <ClCompile Include="Source\Core\Application\Application.cpp" />
     <ClCompile Include="Source\Core\Graphics\Camera.cpp" />
+    <ClCompile Include="Source\Core\Shader.cpp" />
     <ClCompile Include="Source\Core\Timer\Timer.cpp" />
     <ClCompile Include="Source\Ext\Math\SimpleMath.cpp" />
   </ItemGroup>
@@ -29,6 +30,7 @@
     <ClInclude Include="Source\Core\Application\Application.h" />
     <ClInclude Include="Source\Core\Graphics\Camera.h" />
     <ClInclude Include="Source\Core\Math\Math.h" />
+    <ClInclude Include="Source\Core\Shader.h" />
     <ClInclude Include="Source\Core\StandardTypes.h" />
     <ClInclude Include="Source\Core\Timer\Timer.h" />
     <ClInclude Include="Source\Core\WinUtil.h" />

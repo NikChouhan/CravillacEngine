@@ -36,18 +36,18 @@ namespace Cravillac
 		UINT createDeviceFlags = 0;
 		D3D_FEATURE_LEVEL m_featureLevel;
 	protected:
-		ID3D11Device* m_device;
-		ID3D11DeviceContext* m_immediateContext;
+		wrl::ComPtr<ID3D11Device> m_device;
+		wrl::ComPtr<ID3D11DeviceContext> m_immediateContext;
 
 		bool m_enableMSAA = false;
 		UINT m_m4xMsaaQuality;
-		IDXGISwapChain* m_SwapChain;
+		wrl::ComPtr<IDXGISwapChain> m_SwapChain;
 
-		ID3D11RenderTargetView* m_RenderTargetView;
+		wrl::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
 
-		ID3D11Texture2D* m_depthStencilBuffer;
-		ID3D11DepthStencilView* m_depthStencilView;
-		ID3D11DepthStencilState* m_depthStencilState;
+		wrl::ComPtr<ID3D11Texture2D> m_depthStencilBuffer;
+		wrl::ComPtr<ID3D11DepthStencilView> m_depthStencilView;
+		wrl::ComPtr<ID3D11DepthStencilState> m_depthStencilState;
 
 		D3D11_VIEWPORT mScreenViewport;
 
