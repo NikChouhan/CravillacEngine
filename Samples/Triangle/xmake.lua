@@ -5,5 +5,6 @@ target("Triangle")
     add_includedirs("..", "$(projectdir)")
     set_group("Samples")
     add_deps("CravillacSource")
+    add_links("d3d11","user32.lib", "dxgi", "dxguid", "comctl32.lib", "d3dcompiler.lib", "gdi32.lib", "kernel32.lib", "shell32.lib")
 
 target_end()

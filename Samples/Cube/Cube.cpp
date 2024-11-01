@@ -1,26 +1,26 @@
-#include "../../Source/Core/Application/Application.h"
+#include "../../Source/Core/Application.h"
 #include <assert.h>
 #include <DirectXColors.h>
-#include "../../Source/Core/Graphics/Camera.h"
-#include "../../Source/Core/WinUtil.h"
+#include "../../Source/Core/Camera.h"
+//#include "../../Source/Core/WinUtil.h"
 
-using namespace DirectX;
 
 struct SimpleVertex
 {
-	XMFLOAT3 Pos;
-	XMFLOAT4 Color;
+	DirectX::XMFLOAT3 Pos;
+	DirectX::XMFLOAT4 Color;
 };
 
 struct ConstantBuffer
 {
-	XMMATRIX mWorld;
-	XMMATRIX mView;
-	XMMATRIX mProjection;
+	DirectX::XMMATRIX mWorld;
+	DirectX::XMMATRIX mView;
+	DirectX::XMMATRIX mProjection;
 };
 
 namespace cravillac
 {
+	using namespace DirectX;
 	class Cube : public Application
 	{
 	public:
@@ -95,7 +95,7 @@ namespace cravillac
 	{
 		// Compile vertex shader
 		ID3DBlob* vsBlob = nullptr;
-		HR(CompileShader(L"Shaders/Cube/Cube_VS.hlsl", "VSMain", "vs_4_0", &vsBlob), L"Failed compiling vertex shader");
+		HR(CompileShader(L"../../../../Shaders/Cube/Cube_VS.hlsl", "VSMain", "vs_4_0", &vsBlob), L"Failed compiling vertex shader");
 
 		HR(m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, m_vertexShader.GetAddressOf()), L"Failed to create Vertex shader");
 
@@ -116,7 +116,7 @@ namespace cravillac
 
 		// Compile pixel shader
 		ID3DBlob* psBlob = nullptr;
-		HR(CompileShader(L"Shaders/Cube/Cube_PS.hlsl", "PSMain", "ps_4_0", &psBlob), L"Failed compiling pixel shader");
+		HR(CompileShader(L"../../../../Shaders/Cube/Cube_PS.hlsl", "PSMain", "ps_4_0", &psBlob), L"Failed compiling pixel shader");
 
 		HR(m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, m_pixelShader.GetAddressOf()), L"Failed to create pixel shader");
 		psBlob->Release();

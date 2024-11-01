@@ -1,5 +1,7 @@
 #include "../../Source/Core/Application.h"
 #include <assert.h>
+#include <DirectXColors.h>
+
 using namespace DirectX;
 struct SimpleVertex
 {
@@ -60,7 +62,7 @@ namespace cravillac
 	{
 		// Compile vertex shader
 		ID3DBlob* vsBlob = nullptr;
-		HR(CompileShader(L"Shaders/Triangle/Triangle_VS.hlsl", "VSMain", "vs_5_0", &vsBlob), L"Failed compiling vertex shader");
+		HR(CompileShader(L"../../../../Shaders/Triangle/Triangle_VS.hlsl", "VSMain", "vs_5_0", &vsBlob), L"Failed compiling vertex shader");
 
 		HR(m_device->CreateVertexShader(vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(), nullptr, &m_vertexShader), L"Failed to create Vertex shader");
 
@@ -79,7 +81,7 @@ namespace cravillac
 
 		// Compile pixel shader
 		ID3DBlob* psBlob = nullptr;
-		HR(CompileShader(L"Shaders/Triangle/Triangle_PS.hlsl", "PSMain", "ps_5_0", &psBlob), L"Failed compiling pixel shader");
+		HR(CompileShader(L"../../../../Shaders/Triangle/Triangle_PS.hlsl", "PSMain", "ps_5_0", &psBlob), L"Failed compiling pixel shader");
 
 		HR(m_device->CreatePixelShader(psBlob->GetBufferPointer(), psBlob->GetBufferSize(), nullptr, &m_pixelShader), L"Failed to create pixel shader");
 		psBlob->Release();
@@ -134,8 +136,9 @@ namespace cravillac
 		assert(m_immediateContext);
 		assert(m_SwapChain);
 		SetViewPort();
-		m_immediateContext->ClearRenderTargetView(m_RenderTargetView, Colors::Black);
-		m_immediateContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+		m_immediateContext->ClearRenderTargetView(m_RenderTargetView.Get(), Colors::Black);
+		m_immediateContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 		// Render a triangle
 		UINT stride = sizeof(SimpleVertex);
@@ -163,7 +166,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 #if defined(DEBUG) | defined(_DEBUG)
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-	Cravillac::Triangle theApp(hInstance);
+	cravillac::Triangle theApp(hInstance);
 	if (!theApp.Init())
 		return 0;
 	return theApp.Run();
