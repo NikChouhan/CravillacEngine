@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# xmake build output
+build/
+.xmake/
+vsxmake2022/
+compile_commands.json

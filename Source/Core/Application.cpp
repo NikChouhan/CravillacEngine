@@ -7,7 +7,7 @@ namespace
 	// This is just used to forward Windows messages from a global window
 	// procedure to our member function window procedure because we cannot
 	// assign a member function to WNDCLASS::lpfnWndProc.
-	Cravillac::Application* app = 0;
+	cravillac::Application* app = 0;
 }
 
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -17,7 +17,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return app->MsgProc(hwnd, msg, wParam, lParam);
 }
 
-LRESULT CALLBACK Cravillac::Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK cravillac::Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
@@ -44,7 +44,7 @@ LRESULT CALLBACK Cravillac::Application::WndProc(HWND hWnd, UINT msg, WPARAM wPa
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-Cravillac::Application::Application(HINSTANCE hinstance)
+cravillac::Application::Application(HINSTANCE hinstance)
 	: m_width(1800), m_height(900),
 	m_mainWndCaption(L"DX11 Hello World"),
 	m_enableMSAA(false), m_hwnd(0), m_appPaused(false),
@@ -56,12 +56,12 @@ Cravillac::Application::Application(HINSTANCE hinstance)
 	app = this;
 }
 
-Cravillac::Application::~Application()
+cravillac::Application::~Application()
 {
 	// Release DirectX resources
 }
 
-int Cravillac::Application::Run()
+int cravillac::Application::Run()
 {
 	MSG msg = { 0 };
 	m_timer.Reset();
@@ -92,22 +92,22 @@ int Cravillac::Application::Run()
 	return (int)msg.wParam;
 }
 
-HINSTANCE Cravillac::Application::AppInst() const
+HINSTANCE cravillac::Application::AppInst() const
 {
 	return m_hInstance;
 }
 
-HWND Cravillac::Application::MainWnd() const
+HWND cravillac::Application::MainWnd() const
 {
 	return m_hwnd;
 }
 
-float Cravillac::Application::AspectRatio() const
+float cravillac::Application::AspectRatio() const
 {
 	return static_cast<float>(m_width) / static_cast<float> (m_height);
 }
 
-bool Cravillac::Application::InitWindow()
+bool cravillac::Application::InitWindow()
 {
 	WNDCLASS wc;
 	wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -143,7 +143,7 @@ bool Cravillac::Application::InitWindow()
 	return true;
 }
 
-void Cravillac::Application::InitDX11()
+void cravillac::Application::InitDX11()
 {
 	CreateDevice();
 	CheckMSAAQualityLevel();
@@ -154,7 +154,7 @@ void Cravillac::Application::InitDX11()
 	SetViewPort();
 }
 
-HRESULT Cravillac::Application::CompileShader(const WCHAR* fileName, LPCSTR entryPoint, LPCSTR shaderModel, ID3DBlob** blob)
+HRESULT cravillac::Application::CompileShader(const WCHAR* fileName, LPCSTR entryPoint, LPCSTR shaderModel, ID3DBlob** blob)
 {
 	if (!fileName || !entryPoint || !shaderModel)
 	{
@@ -199,7 +199,7 @@ HRESULT Cravillac::Application::CompileShader(const WCHAR* fileName, LPCSTR entr
 }
 
 
-void Cravillac::Application::CreateDevice()
+void cravillac::Application::CreateDevice()
 {
 #if defined(DEBUG) || defined(_DEBUG) 
 	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -213,13 +213,13 @@ void Cravillac::Application::CreateDevice()
 	}
 }
 
-void Cravillac::Application::CheckMSAAQualityLevel()
+void cravillac::Application::CheckMSAAQualityLevel()
 {
 	HR(m_device->CheckMultisampleQualityLevels(DXGI_FORMAT_B8G8R8A8_UNORM, 4, &m_m4xMsaaQuality), L"MSAA4x Support check Failed.");
 	m_enableMSAA = true;
 }
 
-void Cravillac::Application::CreateSwapChain()
+void cravillac::Application::CreateSwapChain()
 {
 	DXGI_SWAP_CHAIN_DESC sd = {};
 	sd.BufferDesc.Width = m_width;
@@ -285,7 +285,7 @@ void Cravillac::Application::CreateSwapChain()
 }
 
 
-void Cravillac::Application::CreateRenderTargetView()
+void cravillac::Application::CreateRenderTargetView()
 {
 	ID3D11Texture2D* backBuffer = nullptr;
 	HR(m_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**> (&backBuffer)), L"Failed to get buffer for render target view");
@@ -296,7 +296,7 @@ void Cravillac::Application::CreateRenderTargetView()
 
 }
 
-void Cravillac::Application::CreateDepthStencilView()
+void cravillac::Application::CreateDepthStencilView()
 {
 	D3D11_TEXTURE2D_DESC depthTextDesc = {};
 	depthTextDesc.Width = m_width;
@@ -344,7 +344,7 @@ void Cravillac::Application::CreateDepthStencilView()
 
 }
 
-void Cravillac::Application::SetViewPort()
+void cravillac::Application::SetViewPort()
 {
 	D3D11_VIEWPORT vp;
 
@@ -358,7 +358,7 @@ void Cravillac::Application::SetViewPort()
 	m_immediateContext->RSSetViewports(1, &vp);
 }
 
-void Cravillac::Application::CalculateFrameStats()
+void cravillac::Application::CalculateFrameStats()
 {
 	// Code computes the average frames per second, and also the 
 	// average time it takes to render one frame. These stats 
@@ -384,7 +384,7 @@ void Cravillac::Application::CalculateFrameStats()
 	}
 }
 
-bool Cravillac::Application::Init()
+bool cravillac::Application::Init()
 {
 	if(!InitWindow()) return false;
 	InitDX11();
@@ -392,7 +392,7 @@ bool Cravillac::Application::Init()
 	return true;
 }
 
-void Cravillac::Application::OnResize()
+void cravillac::Application::OnResize()
 {
 	assert(m_immediateContext);
 	assert(m_device);
@@ -460,7 +460,7 @@ void Cravillac::Application::OnResize()
 	m_immediateContext->RSSetViewports(1, &mScreenViewport);
 }
 
-LRESULT CALLBACK Cravillac::Application::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK cravillac::Application::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{

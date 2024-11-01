@@ -1,7 +1,7 @@
 #include "Camera.h"
 
 using namespace DirectX;
-namespace Cravillac::Graphics
+namespace cravillac::graphics
 {
 
     Camera::Camera()

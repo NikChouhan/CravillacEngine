@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../../Core/WinUtil.h"
+#include "WinUtil.h"
 
 class GameTimer
 {

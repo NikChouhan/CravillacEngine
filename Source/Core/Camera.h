@@ -1,7 +1,11 @@
-#include "../WinUtil.h"
+#pragma once
+#include "WinUtil.h"
 
-
-namespace Cravillac::Graphics
+namespace cravillac::Graphics
+{
+	
+}
+namespace cravillac::graphics
 {
 	class Camera
 	{

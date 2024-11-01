@@ -19,17 +19,17 @@ struct ConstantBuffer
 	XMMATRIX mProjection;
 };
 
-namespace Cravillac
+namespace cravillac
 {
 	class Cube : public Application
 	{
 	public:
 		Cube(HINSTANCE hInstance);
 		~Cube();
-		bool Init();
-		void OnResize();
-		void UpdateScene(float dt);
-		void DrawScene();
+		bool Init() override;
+		void OnResize() override;
+		void UpdateScene(float dt) override;
+		void DrawScene() override;
 
 	private:
 
@@ -51,7 +51,7 @@ namespace Cravillac
 		XMMATRIX m_view;
 		XMMATRIX m_projection;
 
-		Graphics::Camera m_camera;
+		graphics::Camera m_camera;
 	};
 
 	Cube::Cube(HINSTANCE hInstance)
@@ -254,7 +254,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 #if defined(DEBUG) | defined(_DEBUG)
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-	Cravillac::Cube theApp(hInstance);
+	cravillac::Cube theApp(hInstance);
 	if (!theApp.Init())
 		return 0;
 	return theApp.Run();

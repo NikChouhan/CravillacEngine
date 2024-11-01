@@ -1,12 +1,12 @@
-#include "../../Source/Core/Application/Application.h"
+#include "../../Source/Core/Application.h"
 #include <assert.h>
-
+using namespace DirectX;
 struct SimpleVertex
 {
 	XMFLOAT3 Pos;
 	XMFLOAT4 Color;
 };
-namespace Cravillac
+namespace cravillac
 {
 	class Triangle : public Application
 	{
@@ -156,15 +156,15 @@ namespace Cravillac
 	}
 }
 
-//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
-//	PSTR cmdLine, int showCmd)
-//{
-//	// Enable run-time memory check for debug builds.
-//#if defined(DEBUG) | defined(_DEBUG)
-//	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-//#endif
-//	Cravillac::Triangle theApp(hInstance);
-//	if (!theApp.Init())
-//		return 0;
-//	return theApp.Run();
-//};
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
+	PSTR cmdLine, int showCmd)
+{
+	// Enable run-time memory check for debug builds.
+#if defined(DEBUG) | defined(_DEBUG)
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+	Cravillac::Triangle theApp(hInstance);
+	if (!theApp.Init())
+		return 0;
+	return theApp.Run();
+};

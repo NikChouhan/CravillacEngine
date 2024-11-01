@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../Core/WinUtil.h"
-#include "../../Core/Timer/Timer.h"
+#include "WinUtil.h"
+#include "Timer.h"
 #include <string>
 #include <sstream>
 #include <d3dcompiler.h>
@@ -18,7 +18,7 @@
 
 #define ReleaseCOM(x) { if(x){ x->Release(); x = nullptr; } }
 
-namespace Cravillac
+namespace cravillac
 {
 	class Application
 	{
